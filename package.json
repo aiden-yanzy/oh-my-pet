@@ -1,0 +1,113 @@
+{
+  "name": "vue-template",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Opinionated Vue 3 starter optimized for AI coding agents — TypeScript, Vite, Pinia, Tailwind v4, PWA, and a custom oxlint rule set that encodes the project's style.",
+  "keywords": [
+    "agent-optimized",
+    "ai-agent",
+    "claude-code",
+    "oxlint",
+    "pinia",
+    "pwa",
+    "starter",
+    "tailwindcss",
+    "template",
+    "typescript",
+    "vite",
+    "vue",
+    "vue3"
+  ],
+  "homepage": "https://github.com/alexopalic/vue-template#readme",
+  "bugs": {
+    "url": "https://github.com/alexopalic/vue-template/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Alexander Opalic",
+    "email": "opalicalexander@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexopalic/vue-template.git"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "test:unit": "vitest run --project unit",
+    "test:e2e": "playwright test",
+    "test:browser": "vitest run --project browser",
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build",
+    "lint": "oxlint . --fix",
+    "format": "oxfmt src/ test/ e2e/",
+    "test:unit:coverage": "vitest run --project unit --coverage",
+    "knip": "knip",
+    "generate-pwa-assets": "pwa-assets-generator --preset minimal-2023 public/pwa-icon.svg",
+    "postinstall": "simple-git-hooks"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "@vueuse/core": "^14.2.1",
+    "pinia": "^3.0.4",
+    "tailwindcss": "^4.2.1",
+    "vue": "^3.5.29",
+    "vue-router": "^5.0.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@tsconfig/node24": "^24.0.4",
+    "@types/jsdom": "^28.0.0",
+    "@types/node": "^24.11.0",
+    "@vite-pwa/assets-generator": "^1.0.2",
+    "@vitejs/plugin-vue": "^6.0.4",
+    "@vitejs/plugin-vue-jsx": "^5.1.4",
+    "@vitest/browser": "^4.0.18",
+    "@vitest/browser-playwright": "^4.0.18",
+    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/eslint-plugin": "^1.6.9",
+    "@vue/tsconfig": "^0.9.0",
+    "axe-core": "^4.11.1",
+    "eslint-plugin-playwright": "^2.8.0",
+    "eslint-plugin-unicorn": "^63.0.0",
+    "jsdom": "^28.1.0",
+    "knip": "^5.85.0",
+    "lint-staged": "^16.3.2",
+    "npm-run-all2": "^8.0.4",
+    "oxfmt": "^0.36.0",
+    "oxlint": "~1.51.0",
+    "simple-git-hooks": "^2.13.1",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1",
+    "vite-plugin-pwa": "^1.2.0",
+    "vite-plugin-vue-devtools": "^8.0.6",
+    "vitest": "^4.0.18",
+    "vitest-browser-vue": "^2.0.2",
+    "vue-tsc": "^3.2.5"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,vue}": [
+      "oxlint --fix"
+    ],
+    "*.{ts,tsx,vue,json,md,yaml,yml,html}": [
+      "oxfmt"
+    ]
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "packageManager": "pnpm@10.28.2",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "simple-git-hooks",
+      "unrs-resolver"
+    ]
+  }
+}
