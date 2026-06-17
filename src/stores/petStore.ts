@@ -45,7 +45,7 @@ export const usePetStore = defineStore('pet', () => {
     return '😞 不开心';
   });
 
-  async function createPet(name: string) {
+  async function createPet(name: string, styleId: string = 'cat') {
     const dna = generateDNA();
     const newPet: Pet = {
       id: `pet_${Date.now()}`,
@@ -54,7 +54,7 @@ export const usePetStore = defineStore('pet', () => {
       lastActiveAt: Date.now(),
       dna,
       stats: { happiness: 100, health: 100, experience: 0, level: 1, strength: 0, intelligence: 0, agility: 0, charm: 0 },
-      appearance: { formStage: 0, dominantType: 'balanced', colorScheme: 'default' },
+      appearance: { formStage: 0, dominantType: 'balanced', colorScheme: 'default', styleId, accessories: [] },
       skills: [],
     };
     pet.value = newPet;
@@ -249,6 +249,36 @@ export const usePetStore = defineStore('pet', () => {
     }
   }
 
+  /** Equip an accessory by id */
+  function equipAccessory(accessoryId: string) {
+    const p = pet.value;
+    if (!p) return;
+    const list = p.appearance.accessories;
+    if (!list.includes(accessoryId)) {
+      list.push(accessoryId);
+      savePet();
+    }
+  }
+
+  /** Unequip an accessory by id */
+  function unequipAccessory(accessoryId: string) {
+    const p = pet.value;
+    if (!p) return;
+    p.appearance.accessories = p.appearance.accessories.filter(id => id !== accessoryId);
+    savePet();
+  }
+
+  /** Toggle accessory on/off */
+  function toggleAccessory(accessoryId: string) {
+    const p = pet.value;
+    if (!p) return;
+    if (p.appearance.accessories.includes(accessoryId)) {
+      unequipAccessory(accessoryId);
+    } else {
+      equipAccessory(accessoryId);
+    }
+  }
+
   async function deletePet() {
     pet.value = null;
     resetState();
@@ -260,5 +290,6 @@ export const usePetStore = defineStore('pet', () => {
     poopCount, isSleeping, isSick, isDirty, moodAnim, moodText,
     createPet, loadLatestPet, savePet,
     feed, play, toggleSleep, cleanPoop, healPet, gameTick, deletePet,
+    equipAccessory, unequipAccessory, toggleAccessory,
   };
 });

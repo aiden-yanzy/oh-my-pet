@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { usePetStore } from '@/stores/petStore';
 import { useGameStore } from '@/stores/gameStore';
 import { useExploreStore } from '@/stores/exploreStore';
+import { useTaskStore } from '@/stores/taskStore';
 import { useGameLoop } from '@/composables/useGameLoop';
 import PetCanvas from '@/components/pet/PetCanvas.vue';
 import PetProfile from '@/components/pet/PetProfile.vue';
@@ -11,10 +12,12 @@ import DailyTaskList from '@/components/tasks/DailyTaskList.vue';
 import ExploreLogModal from '@/components/logs/ExploreLogModal.vue';
 import OfflineSummary from '@/components/game/OfflineSummary.vue';
 import CreatePetModal from '@/components/game/CreatePetModal.vue';
+import WardrobeDrawer from '@/components/game/WardrobeDrawer.vue';
 
 const petStore = usePetStore();
 const gameStore = useGameStore();
 const exploreStore = useExploreStore();
+const taskStore = useTaskStore();
 
 // Start game loop
 useGameLoop();
@@ -23,6 +26,7 @@ const showCreatePet = ref(false);
 const showProfile = ref(false);
 const showTasks = ref(false);
 const showLogs = ref(false);
+const showWardrobe = ref(false);
 const drawerContent = ref<'tasks' | 'logs' | null>(null);
 
 const petLoaded = ref(false);
@@ -48,6 +52,23 @@ function closeDrawer() {
 }
 
 const unviewedCount = computed(() => exploreStore.unviewedLogs.length);
+
+// Auto-track tasks: watch moodAnim changes to detect pet interactions
+watch(() => petStore.moodAnim, (newVal, oldVal) => {
+  if (newVal === oldVal) return;
+  if (newVal === 'eating' && oldVal !== 'eating') {
+    taskStore.updateProgress('feed', 1);
+  } else if (newVal === 'happy' && oldVal !== 'happy') {
+    taskStore.updateProgress('play', 1);
+  }
+});
+
+// Auto-track exploration completion
+watch(() => exploreStore.isExploring, (newVal, oldVal) => {
+  if (oldVal === true && newVal === false) {
+    taskStore.updateProgress('explore', 1);
+  }
+});
 </script>
 
 <template>
@@ -72,6 +93,13 @@ const unviewedCount = computed(() => exploreStore.unviewedLogs.length);
           >
             {{ unviewedCount > 9 ? '9+' : unviewedCount }}
           </span>
+        </button>
+        <button
+          class="rounded-lg p-2 text-muted hover:text-heading hover:bg-surface-raised transition-colors"
+          title="衣橱"
+          @click="showWardrobe = true"
+        >
+          🎨
         </button>
         <button
           class="rounded-lg p-2 text-muted hover:text-heading hover:bg-surface-raised transition-colors"
@@ -157,6 +185,7 @@ const unviewedCount = computed(() => exploreStore.unviewedLogs.length);
       />
       <OfflineSummary />
       <PetProfile v-if="showProfile" @close="showProfile = false" />
+      <WardrobeDrawer v-if="showWardrobe" @close="showWardrobe = false" />
     </Teleport>
   </div>
 </template>

@@ -276,7 +276,7 @@ describe('petStore', () => {
         lastActiveAt: Date.now(),
         dna: { strengthGene: 1.1, intelligenceGene: 0.9, agilityGene: 1.0, personality: 'lively' },
         stats: { happiness: 80, health: 90, experience: 50, level: 5, strength: 10, intelligence: 8, agility: 12, charm: 3 },
-        appearance: { formStage: 1, dominantType: 'strength', colorScheme: 'default' },
+        appearance: { formStage: 1, dominantType: 'strength', colorScheme: 'default', styleId: 'cat', accessories: [] },
         skills: ['fast_recovery'],
       }
       vi.mocked(storageService.getPet).mockResolvedValue(mockPet)

@@ -34,6 +34,8 @@ function createMockPet(overrides: Partial<Pet> = {}): Pet {
       formStage: 0,
       dominantType: 'balanced',
       colorScheme: 'default',
+      styleId: 'cat',
+      accessories: [],
     },
     skills: [],
     ...overrides,
@@ -107,7 +109,7 @@ describe('evolutionService', () => {
     it('respects fromStage — does not match evolutions for other stages', () => {
       const pet = createMockPet({
         stats: { ...createMockPet().stats, level: 10 },
-        appearance: { formStage: 2, dominantType: 'balanced', colorScheme: 'default' },
+        appearance: { formStage: 2, dominantType: 'balanced', colorScheme: 'default', styleId: 'cat', accessories: [] },
       })
 
       const result = checkEvolution(pet, allEvolutions)
@@ -117,7 +119,7 @@ describe('evolutionService', () => {
     it('matches compound conditions (level + stat)', () => {
       const pet = createMockPet({
         stats: { ...createMockPet().stats, level: 20, strength: 120 },
-        appearance: { formStage: 1, dominantType: 'balanced', colorScheme: 'default' },
+        appearance: { formStage: 1, dominantType: 'balanced', colorScheme: 'default', styleId: 'cat', accessories: [] },
       })
 
       const result = checkEvolution(pet, allEvolutions)
@@ -128,7 +130,7 @@ describe('evolutionService', () => {
     it('returns null when compound conditions partially fail', () => {
       const pet = createMockPet({
         stats: { ...createMockPet().stats, level: 20, strength: 50 },
-        appearance: { formStage: 1, dominantType: 'balanced', colorScheme: 'default' },
+        appearance: { formStage: 1, dominantType: 'balanced', colorScheme: 'default', styleId: 'cat', accessories: [] },
       })
 
       const result = checkEvolution(pet, allEvolutions)
@@ -139,7 +141,7 @@ describe('evolutionService', () => {
       // When multiple evolutions match fromStage, return the first
       const pet = createMockPet({
         stats: { ...createMockPet().stats, level: 10 },
-        appearance: { formStage: 0, dominantType: 'balanced', colorScheme: 'default' },
+        appearance: { formStage: 0, dominantType: 'balanced', colorScheme: 'default', styleId: 'cat', accessories: [] },
       })
 
       const result = checkEvolution(pet, allEvolutions)
@@ -151,7 +153,7 @@ describe('evolutionService', () => {
     it('returns all evolutions whose conditions are met', () => {
       const pet = createMockPet({
         stats: { ...createMockPet().stats, level: 20, strength: 120, intelligence: 110 },
-        appearance: { formStage: 1, dominantType: 'balanced', colorScheme: 'default' },
+        appearance: { formStage: 1, dominantType: 'balanced', colorScheme: 'default', styleId: 'cat', accessories: [] },
       })
 
       const result = getAvailableEvolutions(pet, allEvolutions)
@@ -176,7 +178,7 @@ describe('evolutionService', () => {
   describe('getNextEvolutions', () => {
     it('returns evolutions matching the pet formStage', () => {
       const pet = createMockPet({
-        appearance: { formStage: 0, dominantType: 'balanced', colorScheme: 'default' },
+        appearance: { formStage: 0, dominantType: 'balanced', colorScheme: 'default', styleId: 'cat', accessories: [] },
       })
 
       const result = getNextEvolutions(pet, allEvolutions)
@@ -186,7 +188,7 @@ describe('evolutionService', () => {
 
     it('returns all stage-1 evolutions for pets at formStage 1', () => {
       const pet = createMockPet({
-        appearance: { formStage: 1, dominantType: 'balanced', colorScheme: 'default' },
+        appearance: { formStage: 1, dominantType: 'balanced', colorScheme: 'default', styleId: 'cat', accessories: [] },
       })
 
       const result = getNextEvolutions(pet, allEvolutions)
@@ -197,7 +199,7 @@ describe('evolutionService', () => {
 
     it('returns empty array when no evolutions match the current stage', () => {
       const pet = createMockPet({
-        appearance: { formStage: 99, dominantType: 'balanced', colorScheme: 'default' },
+        appearance: { formStage: 99, dominantType: 'balanced', colorScheme: 'default', styleId: 'cat', accessories: [] },
       })
 
       const result = getNextEvolutions(pet, allEvolutions)
