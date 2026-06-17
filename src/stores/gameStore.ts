@@ -23,6 +23,9 @@ export const useGameStore = defineStore('game', () => {
     const delta = (now - lastTickTime.value) / 1000;
     totalPlayTime.value += delta;
     lastTickTime.value = now;
+    // Pet game tick (poop aging, sleeping recovery, stat decay)
+    const petStore = usePetStore();
+    petStore.gameTick();
     setTimeout(tick, 60000); // tick every minute
   }
 

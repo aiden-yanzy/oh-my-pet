@@ -1,52 +1,42 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import { usePetStore } from '@/stores/petStore';
 import { useExploreStore } from '@/stores/exploreStore';
 import { useTaskStore } from '@/stores/taskStore';
-import { FOODS } from '@/data/foods';
-import { SCENES } from '@/data/scenes';
-import BaseButton from '@/components/BaseButton.vue';
 
 const petStore = usePetStore();
 const exploreStore = useExploreStore();
 const taskStore = useTaskStore();
 
-const showFeedMenu = ref(false);
-const showPlayMenu = ref(false);
-const showRestMenu = ref(false);
-
-const gameTypes = [
-  { id: 'strength' as const, icon: '💪', label: '力量', cooldown: '30s' },
-  { id: 'intelligence' as const, icon: '🧠', label: '智力', cooldown: '30s' },
-  { id: 'agility' as const, icon: '🏃', label: '敏捷', cooldown: '30s' },
-];
-
-const restDurations = [1, 3, 8];
-
 const availableScenes = computed(() => {
   if (!petStore.pet) return [];
+  // Use the highest unlocked scene
+  const SCENES: { id: string; name: string; unlockLevel: number }[] = [
+    { id: 'grassland', name: '草原', unlockLevel: 1 },
+    { id: 'forest', name: '森林', unlockLevel: 10 },
+    { id: 'mountain', name: '山地', unlockLevel: 15 },
+  ];
   return SCENES.filter(s => petStore.pet!.stats.level >= s.unlockLevel);
 });
 
-function handleFeed(foodType: string) {
-  petStore.feed(foodType);
+const bestScene = computed(() => {
+  const scenes = availableScenes.value;
+  return scenes[scenes.length - 1]?.id ?? 'grassland';
+});
+
+function handleFeed() {
+  petStore.feed();
   taskStore.updateProgress('feed', 1);
-  showFeedMenu.value = false;
 }
 
-function handlePlay(gameType: 'strength' | 'intelligence' | 'agility') {
-  petStore.play(gameType);
+function handlePlay() {
+  petStore.play();
   taskStore.updateProgress('play', 1);
-  showPlayMenu.value = false;
 }
 
-function handleRest(hours: number) {
-  petStore.rest(hours);
-  showRestMenu.value = false;
-}
-
-function handleExplore(sceneId: string) {
-  exploreStore.startExploration(sceneId);
+function handleExplore() {
+  if (exploreStore.isExploring) return;
+  exploreStore.startExploration(bestScene.value);
   taskStore.updateProgress('explore', 1);
 }
 </script>
@@ -54,135 +44,93 @@ function handleExplore(sceneId: string) {
 <template>
   <div class="w-full max-w-md mx-auto">
     <!-- Action Buttons Row -->
-    <div class="grid grid-cols-4 gap-2 mb-3">
+    <div class="grid grid-cols-5 gap-1.5">
       <!-- Feed -->
-      <div class="relative">
-        <BaseButton
-          variant="secondary"
-          size="sm"
-          class="w-full flex-col gap-0.5 py-2 h-auto"
-          :disabled="!petStore.pet"
-          @click="showFeedMenu = !showFeedMenu"
-        >
-          <span class="text-lg">🍖</span>
-          <span class="text-[10px]">喂食</span>
-        </BaseButton>
-
-        <!-- Feed Popover -->
-        <div
-          v-if="showFeedMenu"
-          class="absolute bottom-full left-0 mb-2 w-48 rounded-xl border border-border bg-surface-raised p-2 shadow-xl z-20"
-        >
-          <div class="grid grid-cols-2 gap-1.5">
-            <button
-              v-for="food in FOODS"
-              :key="food.id"
-              class="flex flex-col items-center gap-0.5 rounded-lg p-2 text-xs text-body hover:bg-surface-overlay hover:text-heading transition-colors"
-              @click="handleFeed(food.type)"
-            >
-              <span class="text-lg">{{ food.icon }}</span>
-              <span class="font-medium">{{ food.name }}</span>
-              <span class="text-[10px] text-muted">{{ food.description }}</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      <button
+        class="flex flex-col items-center gap-0.5 rounded-xl p-2.5 transition-all active:scale-90"
+        :class="petStore.isSleeping || petStore.isSick
+          ? 'bg-surface-raised text-muted/40 cursor-not-allowed'
+          : 'bg-surface-raised text-body hover:bg-surface-overlay hover:text-heading'"
+        :disabled="petStore.isSleeping || petStore.isSick"
+        @click="handleFeed"
+      >
+        <span class="text-xl leading-none">🍖</span>
+        <span class="text-[10px] font-medium">喂食</span>
+      </button>
 
       <!-- Play -->
-      <div class="relative">
-        <BaseButton
-          variant="secondary"
-          size="sm"
-          class="w-full flex-col gap-0.5 py-2 h-auto"
-          :disabled="!petStore.pet"
-          @click="showPlayMenu = !showPlayMenu"
-        >
-          <span class="text-lg">🎮</span>
-          <span class="text-[10px]">玩耍</span>
-        </BaseButton>
-
-        <!-- Play Popover -->
-        <div
-          v-if="showPlayMenu"
-          class="absolute bottom-full left-0 mb-2 w-44 rounded-xl border border-border bg-surface-raised p-2 shadow-xl z-20"
-        >
-          <button
-            v-for="game in gameTypes"
-            :key="game.id"
-            class="flex items-center gap-2 w-full rounded-lg p-2.5 text-sm text-body hover:bg-surface-overlay hover:text-heading transition-colors"
-            @click="handlePlay(game.id)"
-          >
-            <span class="text-lg">{{ game.icon }}</span>
-            <span class="flex-1 text-left font-medium">{{ game.label }}</span>
-            <span class="text-[10px] text-muted">{{ game.cooldown }}</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Rest -->
-      <div class="relative">
-        <BaseButton
-          variant="secondary"
-          size="sm"
-          class="w-full flex-col gap-0.5 py-2 h-auto"
-          :disabled="!petStore.pet"
-          @click="showRestMenu = !showRestMenu"
-        >
-          <span class="text-lg">😴</span>
-          <span class="text-[10px]">休息</span>
-        </BaseButton>
-
-        <!-- Rest Popover -->
-        <div
-          v-if="showRestMenu"
-          class="absolute bottom-full left-0 mb-2 w-36 rounded-xl border border-border bg-surface-raised p-2 shadow-xl z-20"
-        >
-          <button
-            v-for="hours in restDurations"
-            :key="hours"
-            class="flex items-center justify-center w-full rounded-lg p-2.5 text-sm text-body hover:bg-surface-overlay hover:text-heading transition-colors"
-            @click="handleRest(hours)"
-          >
-            {{ hours }}小时
-          </button>
-        </div>
-      </div>
-
-      <!-- Explore -->
-      <div class="relative">
-        <BaseButton
-          variant="secondary"
-          size="sm"
-          class="w-full flex-col gap-0.5 py-2 h-auto"
-          :disabled="!petStore.pet || exploreStore.isExploring"
-          @click="handleExplore(availableScenes[0]?.id ?? 'grassland')"
-        >
-          <span class="text-lg">🔍</span>
-          <span class="text-[10px]">
-            {{ exploreStore.isExploring ? '探索中...' : '探索' }}
-          </span>
-        </BaseButton>
-      </div>
-    </div>
-
-    <!-- Explore Scenes (when multiple available) -->
-    <div v-if="availableScenes.length > 1" class="flex gap-1.5 mb-2 overflow-x-auto pb-1">
       <button
-        v-for="scene in availableScenes"
-        :key="scene.id"
-        class="flex-shrink-0 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-body hover:border-border-hover hover:text-heading transition-colors"
-        :disabled="exploreStore.isExploring"
-        @click="handleExplore(scene.id)"
+        class="flex flex-col items-center gap-0.5 rounded-xl p-2.5 transition-all active:scale-90"
+        :class="petStore.isSleeping || petStore.isSick
+          ? 'bg-surface-raised text-muted/40 cursor-not-allowed'
+          : 'bg-surface-raised text-body hover:bg-surface-overlay hover:text-heading'"
+        :disabled="petStore.isSleeping || petStore.isSick"
+        @click="handlePlay"
       >
-        {{ scene.name }}
+        <span class="text-xl leading-none">🎮</span>
+        <span class="text-[10px] font-medium">玩耍</span>
+      </button>
+
+      <!-- Sleep Toggle -->
+      <button
+        class="flex flex-col items-center gap-0.5 rounded-xl p-2.5 transition-all active:scale-90"
+        :class="petStore.isSick
+          ? 'bg-surface-raised text-muted/40 cursor-not-allowed'
+          : petStore.isSleeping
+            ? 'bg-primary/20 text-primary ring-1 ring-primary/40'
+            : 'bg-surface-raised text-body hover:bg-surface-overlay hover:text-heading'"
+        :disabled="petStore.isSick"
+        @click="petStore.toggleSleep()"
+      >
+        <span class="text-xl leading-none">{{ petStore.isSleeping ? '🌙' : '😴' }}</span>
+        <span class="text-[10px] font-medium">{{ petStore.isSleeping ? '起床' : '睡觉' }}</span>
+      </button>
+
+      <!-- Clean -->
+      <button
+        class="flex flex-col items-center gap-0.5 rounded-xl p-2.5 transition-all active:scale-90"
+        :class="petStore.poopCount <= 0
+          ? 'bg-surface-raised text-muted/40 cursor-not-allowed'
+          : 'bg-surface-raised text-body hover:bg-surface-overlay hover:text-heading'"
+        :disabled="petStore.poopCount <= 0"
+        @click="petStore.cleanPoop()"
+      >
+        <span class="text-xl leading-none">🚽</span>
+        <span class="text-[10px] font-medium">
+          {{ petStore.poopCount > 0 ? `清洁(${petStore.poopCount})` : '清洁' }}
+        </span>
+      </button>
+
+      <!-- Medicine (shown when sick) -->
+      <button
+        v-if="petStore.isSick"
+        class="flex flex-col items-center gap-0.5 rounded-xl p-2.5 transition-all active:scale-90 bg-danger/20 text-danger ring-1 ring-danger/40"
+        @click="petStore.healPet()"
+      >
+        <span class="text-xl leading-none">💊</span>
+        <span class="text-[10px] font-medium">喂药</span>
+      </button>
+
+      <!-- Explore (hidden when sick, shown when not sick) -->
+      <button
+        v-else
+        class="flex flex-col items-center gap-0.5 rounded-xl p-2.5 transition-all active:scale-90"
+        :class="exploreStore.isExploring || petStore.isSleeping
+          ? 'bg-surface-raised text-muted/40 cursor-not-allowed'
+          : 'bg-surface-raised text-body hover:bg-surface-overlay hover:text-heading'"
+        :disabled="exploreStore.isExploring || petStore.isSleeping"
+        @click="handleExplore"
+      >
+        <span class="text-xl leading-none">🔍</span>
+        <span class="text-[10px] font-medium">
+          {{ exploreStore.isExploring ? '探索中' : '探索' }}
+        </span>
       </button>
     </div>
 
-    <!-- Overlay click to close popovers -->
-    <div
-      v-if="showFeedMenu || showPlayMenu || showRestMenu"
-      class="fixed inset-0 z-10"
-      @click="showFeedMenu = false; showPlayMenu = false; showRestMenu = false"
-    />
+    <!-- Mood text -->
+    <div class="text-center mt-2 text-xs text-muted min-h-[1rem]">
+      {{ petStore.moodText }}
+    </div>
   </div>
 </template>

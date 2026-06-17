@@ -212,33 +212,20 @@ describe('petStore', () => {
   })
 
   describe('rest', () => {
-    it('recovers happiness and health by 10 * durationHours', async () => {
+    it('toggles sleep state', async () => {
       const store = usePetStore()
       await store.createPet('Test')
-      store.pet!.stats.happiness = 30
-      store.pet!.stats.health = 40
 
-      store.rest(3)
+      store.toggleSleep()
+      expect(store.isSleeping).toBe(true)
 
-      expect(store.pet!.stats.happiness).toBe(60) // 30 + 30
-      expect(store.pet!.stats.health).toBe(70) // 40 + 30
-    })
-
-    it('caps recovery at 100', async () => {
-      const store = usePetStore()
-      await store.createPet('Test')
-      store.pet!.stats.happiness = 95
-      store.pet!.stats.health = 90
-
-      store.rest(2)
-
-      expect(store.pet!.stats.happiness).toBe(100)
-      expect(store.pet!.stats.health).toBe(100)
+      store.toggleSleep()
+      expect(store.isSleeping).toBe(false)
     })
 
     it('is a no-op if no pet exists', () => {
       const store = usePetStore()
-      expect(() => store.rest(1)).not.toThrow()
+      expect(() => store.toggleSleep()).not.toThrow()
     })
   })
 
