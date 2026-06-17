@@ -13,6 +13,7 @@ import ExploreLogModal from '@/components/logs/ExploreLogModal.vue';
 import OfflineSummary from '@/components/game/OfflineSummary.vue';
 import CreatePetModal from '@/components/game/CreatePetModal.vue';
 import WardrobeDrawer from '@/components/game/WardrobeDrawer.vue';
+import FeedDrawer from '@/components/game/FeedDrawer.vue';
 
 const petStore = usePetStore();
 const gameStore = useGameStore();
@@ -27,6 +28,7 @@ const showProfile = ref(false);
 const showTasks = ref(false);
 const showLogs = ref(false);
 const showWardrobe = ref(false);
+const showFeed = ref(false);
 const drawerContent = ref<'tasks' | 'logs' | null>(null);
 
 const petLoaded = ref(false);
@@ -142,7 +144,7 @@ watch(() => exploreStore.isExploring, (newVal, oldVal) => {
           <PetCanvas />
 
           <!-- Interaction Bar -->
-          <InteractionBar />
+          <InteractionBar @feed="showFeed = true" />
         </div>
       </template>
     </main>
@@ -186,6 +188,7 @@ watch(() => exploreStore.isExploring, (newVal, oldVal) => {
       <OfflineSummary />
       <PetProfile v-if="showProfile" @close="showProfile = false" />
       <WardrobeDrawer v-if="showWardrobe" @close="showWardrobe = false" />
+      <FeedDrawer v-if="showFeed" @close="showFeed = false" />
     </Teleport>
   </div>
 </template>

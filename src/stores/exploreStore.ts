@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import type { ExplorationLog, GameEvent } from '@/types/event';
 import { generateEvent } from '@/services/eventService';
 import { usePetStore } from './petStore';
+import { useInventoryStore } from './inventoryStore';
 
 export const useExploreStore = defineStore('explore', () => {
   const logs = ref<ExplorationLog[]>([]);
@@ -42,6 +43,10 @@ export const useExploreStore = defineStore('explore', () => {
       if (evt) events.push(evt);
     }
     events.forEach(evt => processEventRewards(pet, evt));
+    // Exploration gives food rewards
+    const invStore = useInventoryStore();
+    const foodCount = 1 + Math.floor(Math.random() * 3);
+    invStore.addRandom(foodCount);
     const log: ExplorationLog = { id: `explore_${Date.now()}`, sceneId, startTime: Date.now() - duration, endTime: Date.now(), events, viewed: false };
     logs.value.unshift(log);
     if (logs.value.length > 50) logs.value = logs.value.slice(0, 50);
@@ -68,6 +73,9 @@ export const useExploreStore = defineStore('explore', () => {
         if (evt) events.push(evt);
       }
       events.forEach(evt => processEventRewards(pet, evt));
+      // Offline exploration gives food
+      const invStore = useInventoryStore();
+      invStore.addRandom(1 + Math.floor(Math.random() * 2));
       const log: ExplorationLog = { id: `explore_offline_${Date.now()}_${i}`, sceneId, startTime: Date.now(), endTime: Date.now(), events, viewed: false };
       logs.value.push(log);
     }

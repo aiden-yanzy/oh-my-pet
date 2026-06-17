@@ -4,8 +4,9 @@ import type { Pet } from '@/types/pet';
 import { generateDNA, applyGene } from '@/services/dnaService';
 import { storageService } from '@/services/storageService';
 import { EVOLUTIONS } from '@/data/evolutions';
-import { FOOD_EFFECTS } from '@/data/foods';
+import { FOOD_EFFECTS_BY_ID, FOOD_EFFECTS } from '@/data/foods';
 import { checkEvolution, getNextEvolutions, unlockSkill } from '@/services/evolutionService';
+import { useInventoryStore } from './inventoryStore';
 
 export const usePetStore = defineStore('pet', () => {
   const pet = ref<Pet | null>(null);
@@ -87,29 +88,32 @@ export const usePetStore = defineStore('pet', () => {
   }
 
   /**
-   * Feed the pet. Every 3 feeds produces a poop.
-   * No cooldown — consequences instead.
+   * Feed the pet with a specific food item from inventory.
+   * Every 3 feeds produces a poop. No cooldown — consequences instead.
    */
-  function feed(foodType?: string) {
+  function feed(foodId?: string) {
     const p = pet.value;
     if (!p || isSleeping.value || isSick.value) return;
-    // Cycle through food types if not specified
-    const types: Array<'meat' | 'vegetable' | 'snack'> = ['meat', 'vegetable', 'snack'];
-    const type: 'meat' | 'vegetable' | 'snack' = foodType
-      ? (foodType as 'meat' | 'vegetable' | 'snack')
-      : types[Math.floor(Math.random() * types.length)]!;
-    const effect = FOOD_EFFECTS[type];
+
+    // If foodId is specified, use it; otherwise pick random
+    let effect;
+    if (foodId && foodId in FOOD_EFFECTS_BY_ID) {
+      // Consume from inventory
+      const invStore = useInventoryStore();
+      if (!invStore.hasFood(foodId as 'steak' | 'chicken' | 'apple' | 'carrot' | 'cookie' | 'candy')) {
+        // No food left, fall back to random
+        effect = applyRandomFoodEffect(p);
+        return;
+      }
+      invStore.consume(foodId as any);
+      effect = FOOD_EFFECTS_BY_ID[foodId as keyof typeof FOOD_EFFECTS_BY_ID];
+    } else {
+      effect = applyRandomFoodEffect(p);
+      return;
+    }
     if (!effect) return;
 
-    if (effect.health) p.stats.health = Math.min(100, p.stats.health + effect.health);
-    if (effect.happiness) p.stats.happiness = Math.min(100, p.stats.happiness + effect.happiness);
-    if (effect.experience) p.stats.experience += effect.experience;
-    if (effect.stat) {
-      const statKey = effect.stat.type;
-      const gained = applyGene(p.dna, statKey as 'strength' | 'intelligence' | 'agility', effect.stat.value);
-      const currentVal = (p.stats as Record<string, number>)[statKey] ?? 0;
-      (p.stats as Record<string, number>)[statKey] = currentVal + gained;
-    }
+    applyEffect(p, effect);
 
     // Poop mechanism: every 3 feeds = 1 poop
     feedSinceLastPoop.value++;
@@ -122,6 +126,33 @@ export const usePetStore = defineStore('pet', () => {
     setTimeout(() => { moodAnim.value = 'idle'; }, 2000);
     checkLevelUp();
     savePet();
+  }
+
+  /** Pick a random food type and apply its effects */
+  function applyRandomFoodEffect(p: Pet) {
+    const types: Array<'meat' | 'vegetable' | 'snack'> = ['meat', 'vegetable', 'snack'];
+    const type = types[Math.floor(Math.random() * types.length)]!;
+    const effect = FOOD_EFFECTS[type];
+    if (!effect) return null;
+    applyEffect(p, effect);
+    moodAnim.value = 'eating';
+    setTimeout(() => { moodAnim.value = 'idle'; }, 2000);
+    checkLevelUp();
+    savePet();
+    return effect;
+  }
+
+  /** Apply stat effects to pet */
+  function applyEffect(p: Pet, effect: { health: number; happiness?: number; stat?: { type: string; value: number }; experience: number }) {
+    if (effect.health) p.stats.health = Math.min(100, p.stats.health + effect.health);
+    if (effect.happiness) p.stats.happiness = Math.min(100, p.stats.happiness + effect.happiness);
+    if (effect.experience) p.stats.experience += effect.experience;
+    if (effect.stat) {
+      const statKey = effect.stat.type;
+      const gained = applyGene(p.dna, statKey as 'strength' | 'intelligence' | 'agility', effect.stat.value);
+      const currentVal = (p.stats as unknown as Record<string, number>)[statKey] ?? 0;
+      (p.stats as unknown as Record<string, number>)[statKey] = currentVal + gained;
+    }
   }
 
   /**

@@ -4,6 +4,8 @@ import { usePetStore } from '@/stores/petStore';
 import { useExploreStore } from '@/stores/exploreStore';
 import { useTaskStore } from '@/stores/taskStore';
 
+const emit = defineEmits<{ feed: [] }>();
+
 const petStore = usePetStore();
 const exploreStore = useExploreStore();
 const taskStore = useTaskStore();
@@ -25,8 +27,7 @@ const bestScene = computed(() => {
 });
 
 function handleFeed() {
-  petStore.feed();
-  taskStore.updateProgress('feed', 1);
+  emit('feed');
 }
 
 function handlePlay() {
