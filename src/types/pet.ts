@@ -84,3 +84,57 @@ export interface Pet {
   userId?: string | null;
   syncedAt?: number | null;
 }
+
+// ──────────────────────────────────
+// Vector pet definitions (new art style)
+// ──────────────────────────────────
+
+export type PetStyleId = 'cat' | 'dog' | 'bunny' | 'chick' | 'bear' | 'fox';
+
+/** Color palette for a vector pet (hex numbers for PIXI) */
+export interface PetPalette {
+  body: number;
+  bodyLight: number;
+  ear: number;
+  earInner: number;
+  face: number;
+  eye: number;
+  eyeWhite: number;
+  nose: number;
+  mouth: number;
+  blush: number;
+  outline: number;
+  belly: number;
+}
+
+export interface PetEyes {
+  x1: number;
+  x2: number;
+  y: number;
+  r: number;
+  gap: number;
+}
+
+/** Vector-pet drawing definition */
+export interface PetVectorDef {
+  id: PetStyleId;
+  name: string;
+  emoji: string;
+  accentColor: number;
+  palette: PetPalette;
+  body: { cx: number; cy: number; rx: number; ry: number };
+  head: { cx: number; cy: number; r: number };
+  ears: Array<{
+    type: 'ellipse' | 'triangle';
+    cx: number; cy: number;
+    rx: number; ry: number;
+    rot?: number;
+    color?: keyof PetPalette;
+    innerColor?: keyof PetPalette;
+  }>;
+  eyes: PetEyes;
+  nose: { x: number; y: number; r: number };
+  blush?: { x1: number; x2: number; y: number; rx: number; ry: number };
+  whiskers?: Array<[number, number, number, number]>;
+  tail?: { cx: number; cy: number; rx: number; ry: number };
+}

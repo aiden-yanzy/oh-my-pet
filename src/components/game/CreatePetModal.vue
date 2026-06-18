@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { usePetStore } from '@/stores/petStore';
-import { PET_STYLES, DEFAULT_STYLE_ID } from '@/data/petStyles';
-import type { PetStyle } from '@/types/pet';
+import { getAllPetVectors } from '@/data/vectorPets';
+import type { PetVectorDef } from '@/types/pet';
 import BaseButton from '@/components/BaseButton.vue';
 
 const petStore = usePetStore();
@@ -12,18 +12,19 @@ const emit = defineEmits<{
 }>();
 
 const name = ref('');
-const selectedStyleId = ref(DEFAULT_STYLE_ID);
+const selectedStyleId = ref('cat');
 const isCreating = ref(false);
 
-const selectedStyle = ref<PetStyle>(PET_STYLES[0]!);
+const styles = getAllPetVectors();
+const selectedStyle = ref<PetVectorDef>(styles[0]!);
 
 function selectStyle(id: string) {
   selectedStyleId.value = id;
-  selectedStyle.value = PET_STYLES.find(s => s.id === id) ?? PET_STYLES[0]!;
+  selectedStyle.value = styles.find(s => s.id === id) ?? styles[0]!;
 }
 
-function getPreviewColor(style: PetStyle): string {
-  return style.accentColor;
+function getPreviewColor(style: PetVectorDef): string {
+  return '#' + style.accentColor.toString(16).padStart(6, '0');
 }
 
 const randomNames = [
@@ -37,7 +38,7 @@ function randomName() {
 }
 
 // Initialize with default
-selectStyle(DEFAULT_STYLE_ID);
+selectStyle('cat');
 
 async function handleCreate() {
   if (!name.value.trim() || isCreating.value) return;
@@ -71,7 +72,7 @@ async function handleCreate() {
         <p class="text-xs text-muted mb-2 text-center">选择宠物类型</p>
         <div class="grid grid-cols-3 gap-2">
           <button
-            v-for="style in PET_STYLES"
+            v-for="style in styles"
             :key="style.id"
             class="flex flex-col items-center gap-0.5 rounded-xl p-2 transition-all"
             :class="selectedStyleId === style.id
